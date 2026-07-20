@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotas — Calculadora de Medidas</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#0a2647">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --blue-900:#0a2647;
+    --blue-800:#0d3266;
+    --blue-700:#134a8a;
+    --line:#5b8fc9;
+    --line-dim:#2c4a72;
+    --cyan:#7fd6e0;
+    --paper:#eef2f6;
+    --paper-dim:#c9d6e4;
+    --amber:#e0a458;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, var(--line-dim) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, var(--line-dim) 0 1px, transparent 1px 40px),
+      var(--blue-900);
+    color:var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    min-height:100vh;
+  }
+
+  header{
+    padding:36px 40px 20px;
+    border-bottom:1px solid var(--line-dim);
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+
+  .title-block{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:var(--cyan);
+  }
+
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:clamp(28px, 4vw, 44px);
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+
+  .subtitle{
+    color:var(--paper-dim);
+    font-size:13px;
+    max-width:520px;
+    line-height:1.5;
+  }
+
+  .stamp{
+    border:1px solid var(--cyan);
+    padding:10px 16px;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--cyan);
+    text-align:right;
+    line-height:1.6;
+  }
+  .stamp b{color:var(--paper); font-family:'Space Grotesk',sans-serif; display:block; font-size:14px; letter-spacing:0;}
+
+  main{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    gap:0;
+  }
+
+  @media (max-width:760px){
+    main{grid-template-columns:1fr;}
+    nav{flex-direction:row !important; overflow-x:auto; border-right:none !important; border-bottom:1px solid var(--line-dim);}
+  }
+
+  nav{
+    border-right:1px solid var(--line-dim);
+    padding:24px 0;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .nav-item{
+    padding:14px 24px;
+    font-size:12.5px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    cursor:pointer;
+    border-left:3px solid transparent;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    transition:all .15s ease;
+    white-space:nowrap;
+  }
+  .nav-item .idx{color:var(--line); font-size:11px;}
+  .nav-item:hover{color:var(--paper); background:rgba(127,214,224,.05);}
+  .nav-item.active{
+    color:var(--cyan);
+    border-left-color:var(--cyan);
+    background:rgba(127,214,224,.07);
+  }
+  .nav-item.active .idx{color:var(--cyan);}
+
+  section.panel{
+    display:none;
+    padding:40px;
+    max-width:640px;
+  }
+  section.panel.active{display:block; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .panel-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .panel-num{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px;
+    color:var(--line);
+  }
+  .panel-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:22px;
+    margin:0;
+  }
+  .panel-desc{
+    color:var(--paper-dim);
+    font-size:13px;
+    margin:0 0 28px;
+    line-height:1.5;
+  }
+
+  .field{
+    margin-bottom:18px;
+  }
+  .field label{
+    display:block;
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    margin-bottom:8px;
+  }
+  .field .unit{color:var(--line); text-transform:none; letter-spacing:0;}
+  .field input, .field select{
+    width:100%;
+    background:rgba(255,255,255,.03);
+    border:1px solid var(--line-dim);
+    border-bottom:2px solid var(--line);
+    color:var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:16px;
+    padding:11px 12px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  .field input:focus, .field select:focus{border-bottom-color:var(--cyan);}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media(max-width:480px){.field-row{grid-template-columns:1fr;}}
+
+  button.calc{
+    margin-top:6px;
+    background:var(--cyan);
+    color:var(--blue-900);
+    border:none;
+    padding:13px 26px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:transform .1s ease, background .15s ease;
+  }
+  button.calc:hover{background:#9de3eb;}
+  button.calc:active{transform:scale(.98);}
+
+  .results{
+    margin-top:28px;
+    border-top:1px dashed var(--line-dim);
+    padding-top:22px;
+    display:none;
+  }
+  .results.show{display:block; animation:fade .25s ease;}
+  .result-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:10px 0;
+    border-bottom:1px solid var(--line-dim);
+  }
+  .result-row:last-child{border-bottom:none;}
+  .result-label{font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:var(--paper-dim);}
+  .result-value{font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:600; color:var(--cyan);}
+  .result-value .unit{font-size:12px; color:var(--paper-dim); font-family:'IBM Plex Mono',monospace; margin-left:4px;}
+
+  .note{
+    margin-top:16px;
+    font-size:11.5px;
+    color:var(--line);
+    line-height:1.6;
+    border-left:2px solid var(--line-dim);
+    padding-left:12px;
+  }
+
+  .error{color:var(--amber); font-size:12px; margin-top:10px; display:none;}
+  .error.show{display:block;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <span class="eyebrow">Estudio — Herramientas de obra</span>
+    <h1>Cotas</h1>
+    <p class="subtitle">Superficies, materiales y conversiones de uso diario en el estudio y en el sitio de obra.</p>
+  </div>
+  <div class="stamp">
+    <b>Hoja 01/01</b>
+    Escala s/e · Rev. A
+  </div>
+</header>
+
+<main>
+  <nav id="nav"></nav>
+
+  <div id="panels"></div>
+</main>
+
+<script>
+const modules = [
+  {
+    id: "rect",
+    label: "Rectangular",
+    title: "Ambiente rectangular",
+    desc: "Área y perímetro de un local, habitación o paño rectangular.",
+    fields: [
+      {id:"ancho", label:"Ancho", unit:"m", type:"number", step:"0.01"},
+      {id:"largo", label:"Largo", unit:"m", type:"number", step:"0.01"},
+    ],
+    calc: (v) => {
+      const area = v.ancho * v.largo;
+      const perimetro = 2 * (v.ancho + v.largo);
+      return [
+        {label:"Área", value:area, unit:"m²"},
+        {label:"Perímetro", value:perimetro, unit:"m"},
+      ];
+    }
+  },
+  {
+    id: "circ",
+    label: "Circular",
+    title: "Ambiente circular",
+    desc: "Área y circunferencia a partir del radio.",
+    fields: [
+      {id:"radio", label:"Radio", unit:"m", type:"number", step:"0.01"},
+    ],
+    calc: (v) => {
+      const area = Math.PI * v.radio ** 2;
+      const perimetro = 2 * Math.PI * v.radio;
+      return [
+        {label:"Área", value:area, unit:"m²"},
+        {label:"Circunferencia", value:perimetro, unit:"m"},
+      ];
+    }
+  },
+  {
+    id: "baldosas",
+    label: "Baldosas",
+    title: "Baldosas necesarias",
+    desc: "Cantidad de baldosas para cubrir un piso, incluyendo un porcentaje de desperdicio por cortes.",
+    fields: [
+      {id:"areaAmbiente", label:"Área del ambiente", unit:"m²", type:"number", step:"0.01"},
+      {id:"areaBaldosa", label:"Área de cada baldosa", unit:"m²", type:"number", step:"0.001"},
+      {id:"desperdicio", label:"Desperdicio estimado", unit:"%", type:"number", step:"1", value:10},
+    ],
+    calc: (v) => {
+      const cantidadExacta = v.areaAmbiente / v.areaBaldosa;
+      const cantidadConDesperdicio = cantidadExacta * (1 + v.desperdicio/100);
+      return [
+        {label:"Baldosas (sin desperdicio)", value:cantidadExacta, unit:"u"},
+        {label:"Baldosas a comprar", value:Math.ceil(cantidadConDesperdicio), unit:"u"},
+      ];
+    }
+  },
+  {
+    id: "pintura",
+    label: "Pintura",
+    title: "Pintura para paredes",
+    desc: "Galones necesarios según el perímetro, la altura y el rendimiento del producto.",
+    fields: [
+      {id:"perimetro", label:"Perímetro del ambiente", unit:"m", type:"number", step:"0.01"},
+      {id:"altura", label:"Altura de pared", unit:"m", type:"number", step:"0.01"},
+      {id:"descuento", label:"Puertas y ventanas a descontar", unit:"m²", type:"number", step:"0.01", value:0},
+      {id:"rendimiento", label:"Rendimiento de la pintura", unit:"m² por galón", type:"number", step:"0.1", value:35},
+    ],
+    calc: (v) => {
+      const areaPintar = Math.max(0, (v.perimetro * v.altura) - v.descuento);
+      const galones = areaPintar / v.rendimiento;
+      return [
+        {label:"Área a pintar", value:areaPintar, unit:"m²"},
+        {label:"Galones necesarios", value:galones, unit:"gal"},
+      ];
+    }
+  },
+  {
+    id: "volumen",
+    label: "Volumen",
+    title: "Volumen de un ambiente",
+    desc: "Volumen en metros cúbicos a partir del área de piso y la altura.",
+    fields: [
+      {id:"areaPiso", label:"Área del piso", unit:"m²", type:"number", step:"0.01"},
+      {id:"altura", label:"Altura del ambiente", unit:"m", type:"number", step:"0.01"},
+    ],
+    calc: (v) => {
+      const volumen = v.areaPiso * v.altura;
+      return [
+        {label:"Volumen", value:volumen, unit:"m³"},
+      ];
+    }
+  },
+  {
+    id: "conversion",
+    label: "Conversión",
+    title: "Conversión de unidades",
+    desc: "Metros a pies, y metros cuadrados a pies cuadrados.",
+    fields: [
+      {id:"metros", label:"Medida", unit:"m", type:"number", step:"0.01"},
+    ],
+    calc: (v) => {
+      const pies = v.metros * 3.28084;
+      const m2 = v.metros ** 2;
+      const ft2 = m2 * 10.7639;
+      return [
+        {label:"Equivalente lineal", value:pies, unit:"ft"},
+        {label:"Si fuera área (lado²)", value:ft2, unit:"ft²"},
+      ];
+    }
+  },
+];
+
+const nav = document.getElementById("nav");
+const panelsContainer = document.getElementById("panels");
+
+modules.forEach((m, i) => {
+  const navItem = document.createElement("div");
+  navItem.className = "nav-item" + (i===0 ? " active" : "");
+  navItem.dataset.id = m.id;
+  navItem.innerHTML = `<span class="idx">${String(i+1).padStart(2,"0")}</span> ${m.label}`;
+  navItem.onclick = () => switchPanel(m.id);
+  nav.appendChild(navItem);
+
+  const panel = document.createElement("section");
+  panel.className = "panel" + (i===0 ? " active" : "");
+  panel.id = "panel-" + m.id;
+
+  let fieldsHtml = "";
+  m.fields.forEach(f => {
+    fieldsHtml += `
+      <div class="field">
+        <label>${f.label} <span class="unit">(${f.unit})</span></label>
+        <input type="${f.type}" step="${f.step}" id="${m.id}-${f.id}" placeholder="0" value="${f.value !== undefined ? f.value : ''}">
+      </div>`;
+  });
+
+  panel.innerHTML = `
+    <div class="panel-head">
+      <span class="panel-num">${String(i+1).padStart(2,"0")}</span>
+      <h2 class="panel-title">${m.title}</h2>
+    </div>
+    <p class="panel-desc">${m.desc}</p>
+    ${fieldsHtml}
+    <button class="calc" data-id="${m.id}">Calcular</button>
+    <div class="error" id="${m.id}-error">Completá todos los campos con valores válidos.</div>
+    <div class="results" id="${m.id}-results"></div>
+  `;
+  panelsContainer.appendChild(panel);
+
+  panel.querySelector("button.calc").onclick = () => runCalc(m);
+});
+
+function switchPanel(id){
+  document.querySelectorAll(".nav-item").forEach(el => el.classList.toggle("active", el.dataset.id === id));
+  document.querySelectorAll(".panel").forEach(el => el.classList.toggle("active", el.id === "panel-" + id));
+}
+
+function runCalc(m){
+  const values = {};
+  let valid = true;
+  m.fields.forEach(f => {
+    const raw = document.getElementById(`${m.id}-${f.id}`).value;
+    const num = parseFloat(raw);
+    if (isNaN(num)) valid = false;
+    values[f.id] = num;
+  });
+
+  const errorEl = document.getElementById(`${m.id}-error`);
+  const resultsEl = document.getElementById(`${m.id}-results`);
+
+  if (!valid) {
+    errorEl.classList.add("show");
+    resultsEl.classList.remove("show");
+    return;
+  }
+  errorEl.classList.remove("show");
+
+  const results = m.calc(values);
+  resultsEl.innerHTML = results.map(r => `
+    <div class="result-row">
+      <span class="result-label">${r.label}</span>
+      <span class="result-value">${formatNum(r.value)}<span class="unit">${r.unit}</span></span>
+    </div>
+  `).join("") + noteFor(m.id);
+  resultsEl.classList.add("show");
+}
+
+function formatNum(n){
+  return Number(n).toLocaleString("es-AR", {maximumFractionDigits: 2});
+}
+
+function noteFor(id){
+  if (id === "baldosas") return `<div class="note">La cantidad a comprar redondea hacia arriba. Ajustá el % de desperdicio según el patrón de colocación (recto, diagonal, espiga).</div>`;
+  if (id === "pintura") return `<div class="note">El rendimiento por galón varía según la marca y si se aplican dos manos. Verificá la ficha técnica del producto.</div>`;
+  return "";
+}
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+}
+</script>
+</body>
+</html>
