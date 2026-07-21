@@ -315,17 +315,30 @@ const modules = [
     id: "pintura",
     label: "Pintura",
     title: "Pintura para paredes",
-    desc: "Galones necesarios según el perímetro, la altura y el rendimiento del producto.",
+    desc: "Galones necesarios a partir de las dimensiones del ambiente, descontando ventanas y puertas.",
     fields: [
-      {id:"perimetro", label:"Perímetro del ambiente", unit:"m", type:"number", step:"0.01"},
+      {id:"dimA", label:"Dimensión ambiente A", unit:"m", type:"number", step:"0.01"},
+      {id:"dimB", label:"Dimensión ambiente B", unit:"m", type:"number", step:"0.01"},
       {id:"altura", label:"Altura de pared", unit:"m", type:"number", step:"0.01"},
-      {id:"descuento", label:"Puertas y ventanas a descontar", unit:"m²", type:"number", step:"0.01", value:0},
+      {id:"ventanaA", label:"Ventana - ancho", unit:"m", type:"number", step:"0.01", value:0},
+      {id:"ventanaB", label:"Ventana - alto", unit:"m", type:"number", step:"0.01", value:0},
+      {id:"ventanaCant", label:"Cantidad de ventanas", unit:"u", type:"number", step:"1", value:0},
+      {id:"puertaA", label:"Puerta - ancho", unit:"m", type:"number", step:"0.01", value:0},
+      {id:"puertaB", label:"Puerta - alto", unit:"m", type:"number", step:"0.01", value:0},
+      {id:"puertaCant", label:"Cantidad de puertas", unit:"u", type:"number", step:"1", value:0},
       {id:"rendimiento", label:"Rendimiento de la pintura", unit:"m² por galón", type:"number", step:"0.1", value:35},
     ],
     calc: (v) => {
-      const areaPintar = Math.max(0, (v.perimetro * v.altura) - v.descuento);
+      const perimetro = 2 * (v.dimA + v.dimB);
+      const areaBruta = perimetro * v.altura;
+      const areaVentanas = v.ventanaA * v.ventanaB * v.ventanaCant;
+      const areaPuertas = v.puertaA * v.puertaB * v.puertaCant;
+      const areaPintar = Math.max(0, areaBruta - areaVentanas - areaPuertas);
       const galones = areaPintar / v.rendimiento;
       return [
+        {label:"Perímetro", value:perimetro, unit:"m"},
+        {label:"Área bruta de paredes", value:areaBruta, unit:"m²"},
+        {label:"Área descontada (vanos)", value:areaVentanas + areaPuertas, unit:"m²"},
         {label:"Área a pintar", value:areaPintar, unit:"m²"},
         {label:"Galones necesarios", value:galones, unit:"gal"},
       ];
