@@ -593,8 +593,8 @@ function addMsg(role, text){
   chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-// Pegá acá la URL de tu Worker de Cloudflare (usando cotas-worker-gemini.js)
-const ASSISTANT_ENDPOINT = "https://cotas.victorbau-ore.workers.dev/";
+// URL del Worker de Cloudflare (Gemini)
+const ASSISTANT_ENDPOINT = "https://cotas.victorbau-ore.workers.dev";
 
 async function sendChat(){
   const text = chatInput.value.trim();
