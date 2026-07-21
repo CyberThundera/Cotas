@@ -356,7 +356,7 @@ document.getElementById("panels").insertAdjacentHTML("beforeend", `
       <h2 class="panel-title">Asistente de Cotas</h2>
     </div>
     <p class="panel-desc">Preguntá dudas de obra o pegá una cuenta para que la revise.</p>
-    <div class="apk-note">Este asistente usa un modelo de IA en línea. Necesita conexión a internet para responder.</div>
+    <div class="apk-note">Este asistente usa Gemini a través de un Worker propio. Necesita conexión a internet y ASSISTANT_ENDPOINT bien configurado.</div>
     <div class="chat-log" id="chatLog"></div>
     <div class="chat-thinking" id="chatThinking">Pensando…</div>
     <div class="chat-input-row">
@@ -593,6 +593,9 @@ function addMsg(role, text){
   chatLog.scrollTop = chatLog.scrollHeight;
 }
 
+// Pegá acá la URL de tu Worker de Cloudflare (usando cotas-worker-gemini.js)
+const ASSISTANT_ENDPOINT = "https://cotas-asistente.TU-USUARIO.workers.dev";
+
 async function sendChat(){
   const text = chatInput.value.trim();
   if (!text) return;
@@ -603,12 +606,10 @@ async function sendChat(){
   chatThinking.classList.add("show");
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch(ASSISTANT_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
         system: "Sos el asistente de Cotas, una app de cálculo de medidas para arquitectos y obra (áreas, perímetros, baldosas, pintura, volumen, conversión de unidades). Respondé en español rioplatense, corto y directo. Si te piden verificar una cuenta, rehacé el cálculo paso a paso y decí si el resultado es correcto o no, mostrando dónde está el error si lo hay.",
         messages: chatHistory,
       }),
@@ -619,7 +620,7 @@ async function sendChat(){
     addMsg("assistant", reply);
     chatHistory.push({ role: "assistant", content: reply });
   } catch (err) {
-    addMsg("assistant", "No se pudo conectar con el asistente. Revisá tu conexión a internet (en el APK final hace falta configurar una clave de API propia).");
+    addMsg("assistant", "No se pudo conectar con el asistente. Revisá tu conexión a internet y que ASSISTANT_ENDPOINT esté bien configurado.");
   } finally {
     chatSend.disabled = false;
     chatThinking.classList.remove("show");
