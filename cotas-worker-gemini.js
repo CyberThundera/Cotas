@@ -44,8 +44,19 @@ export default {
 
       const data = await geminiResponse.json();
 
-      // Normalizamos la respuesta al mismo formato que ya usa el front (estilo Anthropic)
-      const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join("") || "";
+      // Normalizamos la respuesta, mostrando el motivo si algo falla en vez de dejarlo vacío
+      let text = "";
+      if (data?.candidates?.[0]?.content?.parts?.length) {
+        text = data.candidates[0].content.parts.map(p => p.text || "").join("");
+      } else if (data?.error?.message) {
+        text = "Error de Gemini: " + data.error.message;
+      } else if (data?.promptFeedback?.blockReason) {
+        text = "La respuesta fue bloqueada (" + data.promptFeedback.blockReason + "). Reformulá la pregunta.";
+      } else if (data?.candidates?.[0]?.finishReason && data.candidates[0].finishReason !== "STOP") {
+        text = "Respuesta cortada (" + data.candidates[0].finishReason + "). Probá de nuevo.";
+      } else {
+        text = "No llegó respuesta del modelo. Detalle técnico: " + JSON.stringify(data).slice(0, 300);
+      }
       const normalized = { content: [{ type: "text", text }], raw: data };
 
       return new Response(JSON.stringify(normalized), {
